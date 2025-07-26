@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "807626793053",
+    "project_id": "finhabit-agentic-6c961",
+    "storage_bucket": "finhabit-agentic-6c961.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:807626793053:android:1ef6c8e73f4b4006bdadb4",
+        "android_client_info": {
+          "package_name": "com.example.my_flutter_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD22l-Va3yqKlRZ4QPtW-wAfqfMr7pBYfo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
