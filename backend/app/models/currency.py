@@ -6,6 +6,6 @@ class Currency(Base):
 
     id         = Column(Integer, primary_key=True, index=True)
     code       = Column(String(3), unique=True, nullable=False)
-    name       = Column(String, nullable=False)
+    name       = Column(String, nullable=True)
     symbol     = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

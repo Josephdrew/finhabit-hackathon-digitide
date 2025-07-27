@@ -17,11 +17,24 @@ config = context.config
 fileConfig(config.config_file_name)
 
 # Import your models and Base (sync-compatible metadata)
-from app.core.database import Base
-from app.models import user, currency, asset_type, snapshot, net_asset, budget
 
-# Set metadata for autogenerate support
+import pkgutil
+import importlib
+
+import app.models  # root of your models package
+
+models_path = app.models.__path__
+
+# Dynamically import all modules in app.models
+for _, module_name, _ in pkgutil.iter_modules(models_path):
+    try:
+        importlib.import_module(f"app.models.{module_name}")
+    except Exception as e:
+        print(f"Failed to import {module_name}: {e}")
+
+from app.core.database import Base
 target_metadata = Base.metadata
+
 
 # DB URL (async format: postgresql+asyncpg://user:pass@host/db)
 DATABASE_URL = os.getenv("DATABASE_URL")

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, func
+from sqlalchemy import Column, Integer, String, DateTime, func, Numeric
 from sqlalchemy.orm import relationship
 from app.core.database import Base
 
@@ -9,6 +9,7 @@ class User(Base):
     name       = Column(String(100), nullable=False)
     email      = Column(String(100), unique=True, nullable=False)
     phone      = Column(String(20), unique=True, nullable=False)
+    salary     = Column(Numeric(12, 2), nullable=True) 
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
     budget_choices = relationship("BudgetChoice", back_populates="user")
