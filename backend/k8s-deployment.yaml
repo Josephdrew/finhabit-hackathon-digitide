@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: finhabit-backend
+  labels:
+    app: finhabit-backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: finhabit-backend
+  template:
+    metadata:
+      labels:
+        app: finhabit-backend
+    spec:
+      containers:
+      - name: finhabit-backend
+        image: us-central1-docker.pkg.dev/finhabit-agentic/finhabit-repository/finhabit-backend:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        - name: DATABASE_URL
+          value: "sqlite+aiosqlite:///./finhabit.db"
+        - name: DATABASE_URL_SYNC
+          value: "sqlite:///./finhabit.db"
+        - name: OTP_TTL_MINUTES
+          value: "5"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: finhabit-backend-service
+  labels:
+    app: finhabit-backend
+spec:
+  selector:
+    app: finhabit-backend
+  ports:
+  - port: 80
+    targetPort: 8000
+    protocol: TCP
+  type: LoadBalancer 

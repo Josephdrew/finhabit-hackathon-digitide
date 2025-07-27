@@ -1,0 +1,93 @@
+steps:
+  # Build the Docker image
+  # Create Artifact Registry repository if it doesn't exist
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        if ! gcloud artifacts repositories describe ${_REPOSITORY} --location=${_REGION}; then
+          gcloud artifacts repositories create ${_REPOSITORY} \
+            --repository-format=docker \
+            --location=${_REGION}
+        fi
+
+  # Build the Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build',
+      '-t', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REPOSITORY}/finhabit-backend:${_SHORT_SHA}',
+      '-t', '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REPOSITORY}/finhabit-backend:latest',
+      '.'
+    ]
+
+  # Push the Docker image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'push',
+      '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REPOSITORY}/finhabit-backend:${_SHORT_SHA}'
+    ]
+
+  # Push the latest tag
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'push', 
+      '${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REPOSITORY}/finhabit-backend:latest'
+    ]
+
+  # Create GKE cluster if it doesn't exist
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        if ! gcloud container clusters describe finhabit-cluster --region=${_REGION}; then
+          gcloud container clusters create finhabit-cluster \
+            --region=${_REGION} \
+            --num-nodes=1 \
+            --machine-type=e2-standard-2
+        fi
+
+  # Get GKE credentials
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args: [
+      'container',
+      'clusters',
+      'get-credentials',
+      'finhabit-cluster',
+      '--region=${_REGION}'
+    ]
+
+  # Apply Kubernetes deployment
+  - name: 'gcr.io/cloud-builders/kubectl'
+    args: [
+      'apply',
+      '-f',
+      'k8s-deployment.yaml'
+    ]
+    env:
+    - 'CLOUDSDK_COMPUTE_REGION=${_REGION}'
+    - 'CLOUDSDK_CONTAINER_CLUSTER=finhabit-cluster'
+
+  # Update deployment image
+  - name: 'gcr.io/cloud-builders/kubectl'
+    args: [
+      'set', 
+      'image',
+      'deployment/finhabit-backend',
+      'finhabit-backend=${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REPOSITORY}/finhabit-backend:${_SHORT_SHA}'
+    ]
+    env:
+    - 'CLOUDSDK_COMPUTE_REGION=${_REGION}'
+    - 'CLOUDSDK_CONTAINER_CLUSTER=finhabit-cluster'
+
+substitutions:
+  _REGION: us-central1
+  _REPOSITORY: finhabit-repository
+  _PROJECT_ID: 'finhabit-agentic'
+  _SHORT_SHA: '1234567890'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: 3600s
